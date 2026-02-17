@@ -18,9 +18,30 @@ async function main() {
     baseURL: baseURL,
   });
 
+  const tools = [
+    {
+      "type": "function",
+      "function": {
+        "name": "Read",
+        "description": "Read and return the contents of a file",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "file_path": {
+              "type": "string",
+              "description": "The path to the file to read"
+            }
+          },
+          "required": ["file_path"]
+        }
+      }
+    }
+  ]
+
   const response = await client.chat.completions.create({
     model: "anthropic/claude-haiku-4.5",
     messages: [{ role: "user", content: prompt }],
+    tools: tools
   });
 
   if (!response.choices || response.choices.length === 0) {
