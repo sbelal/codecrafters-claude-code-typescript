@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import type { ChatCompletionTool } from "openai/resources";
 
 async function main() {
   const [, , flag, prompt] = process.argv;
@@ -18,7 +19,7 @@ async function main() {
     baseURL: baseURL,
   });
 
-  const tools = [
+  const tools: ChatCompletionTool[] = [
     {
       "type": "function",
       "function": {
