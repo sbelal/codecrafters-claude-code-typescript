@@ -25,8 +25,13 @@ async function main() {
 
   const response = await llmService.SendMessage(prompt)
 
-  const toolResults = await llmService.ProcessToolCalls(response)
-  toolResults.map((toolResult)=>console.log(toolResult.result)) 
+  if (!response.toolCalls) {
+    console.log(response.content)
+  } else {
+    const toolResults = await llmService.ProcessToolCalls(response)
+    toolResults.map((toolResult) => console.log(toolResult.result))
+  }
+
 
   // You can use print statements as follows for debugging, they'll be visible when running tests.
   //console.error("Logs from your program will appear here!");
