@@ -21,6 +21,7 @@ export interface GenericResponse {
     id: string;
     role: 'assistant';
     content: string | null;
+    finishReason: 'stop' | 'length' | 'tool_calls' | 'content_filter';
     toolCalls?: Array<{
         id: string;
         name: string;
