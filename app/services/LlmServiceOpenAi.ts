@@ -39,14 +39,15 @@ export class LlmServiceOpenAI extends BaseLlmService {
     }
 
     private mapOpenAiResponseToGenericResponse(response: ChatCompletion): GenericResponse {
-        const choice = response.choices[0].message;
+        const choice = response.choices[0];
 
         return {
             id: response.id,
             role: 'assistant',
-            content: choice.content,
+            content: choice.message.content,
+            finishReason: choice.finish_reason as GenericResponse['finishReason'],
             // Map OpenAI tool_calls to our cleaner format
-            toolCalls: choice.tool_calls
+            toolCalls: choice.message.tool_calls
                 ?.filter((tc): tc is ChatCompletionMessageFunctionToolCall => tc.type === 'function')
                 .map((tc) => ({
                     id: tc.id,

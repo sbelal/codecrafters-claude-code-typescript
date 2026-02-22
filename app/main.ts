@@ -32,28 +32,35 @@ async function main() {
   const toolService = new ToolService();
 
   // 1. Send user message — LLM service handles history internally
-  const response = await llmService.SendMessage({ role: 'user', content: prompt });
+  let response = await llmService.SendMessage({ role: 'user', content: prompt });
 
-  if (!response.toolCalls) {
-    console.log(response.content)
-  } else {
-    // 2. Process tool calls via ToolService
-    const toolResults = await toolService.ProcessToolCalls(response)
+  // 2. Keep processing until the LLM signals it's done
+  while (response.finishReason !== 'stop') {
+    if (response.finishReason === 'tool_calls' && response.toolCalls) {
+      const toolResults = await toolService.ProcessToolCalls(response);
 
-    for (const toolResult of toolResults) {
-      console.log(`Tool ${toolResult.toolName} result: ${typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result)}`);
+      // for (const toolResult of toolResults) {
+      //   console.log(`Tool ${toolResult.toolName} result: ${typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result)}`);
+      // }
+
+      // Send tool results back to LLM
+      response = await llmService.SendMessage({
+        role: 'tool',
+        content: null,
+        toolResults: toolResults.map(tr => ({
+          toolCallId: tr.id,
+          content: typeof tr.result === 'string' ? tr.result : JSON.stringify(tr.result)
+        }))
+      });
+    } else {
+      // Unexpected finish reason (e.g., 'length', 'content_filter')
+      console.error(`Unexpected finish reason: ${response.finishReason}`);
+      break;
     }
+  }
 
-    // 3. Send tool results back to LLM as a single message
-    const finalResponse = await llmService.SendMessage({
-      role: 'tool',
-      content: null,
-      toolResults: toolResults.map(tr => ({
-        toolCallId: tr.id,
-        content: typeof tr.result === 'string' ? tr.result : JSON.stringify(tr.result)
-      }))
-    });
-    console.log(finalResponse.content);
+  if (response.content) {
+    console.log(response.content);
   }
 }
 
