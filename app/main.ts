@@ -1,5 +1,6 @@
 import { readFileTool } from "./tools/readFile";
 import { writeFileTool } from "./tools/writeFile";
+import { bashTool } from "./tools/bash";
 import { LlmServiceOpenAI } from "./services/LlmServiceOpenAi";
 import { ToolService } from "./services/ToolService";
 import type { Tool } from "./repos/ToolRegistryRepo";
@@ -8,7 +9,7 @@ function createLlmService(): LlmServiceOpenAI {
   const provider = process.env.LLM_PROVIDER
     ?? (process.env.OLLAMA_MODEL ? "ollama" : "openrouter");
 
-  let tools: Tool[] = [readFileTool, writeFileTool];
+  let tools: Tool[] = [readFileTool, writeFileTool, bashTool];
   if (provider === "ollama") {
     const model = process.env.OLLAMA_MODEL ?? "qwen3-coder:30b";
     const baseUrl = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434/v1";
