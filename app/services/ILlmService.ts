@@ -1,5 +1,21 @@
-import { ToolRegistry, type Tool, type ToolExecutionResult } from "../repos/ToolRegistryRepo";
+import type { Tool } from "../repos/ToolRegistryRepo";
+import { InMemoryMessageHistory } from "./InMemoryMessageHistory";
 
+
+export interface GenericMessage {
+    role: 'user' | 'assistant' | 'tool';
+    content: string | null;
+    toolCalls?: Array<{
+        id: string;
+        name: string;
+        arguments: any;
+    }>;
+    toolCallId?: string; // For single tool result (role: 'tool')
+    toolResults?: Array<{  // For batched tool results (role: 'tool')
+        toolCallId: string;
+        content: string;
+    }>;
+}
 
 export interface GenericResponse {
     id: string;
@@ -20,31 +36,18 @@ export interface GenericResponse {
 
 
 export interface ILlmService {
-    SendMessage(prompt: string): Promise<GenericResponse>;
+    SendMessage(message: GenericMessage): Promise<GenericResponse>;
 }
 
 export abstract class BaseLlmService implements ILlmService {
 
     protected tools?: Tool[]
+    protected history: InMemoryMessageHistory = new InMemoryMessageHistory();
 
     constructor(tools?: Tool[]) {
         this.tools = tools ? tools : undefined
     }
 
-
-    public SendMessage(prompt: string): Promise<GenericResponse> {
-        throw new Error("Method not implemented.");
-    }
-
-    public async ProcessToolCalls(response: GenericResponse): Promise<ToolExecutionResult[]> {
-
-        const toolResponses = await Promise.all(
-            response.toolCalls?.map(
-                (tool) => ToolRegistry.ExecuteTool(tool.name, tool.id, tool.arguments)
-            ) || []
-        );
-
-        return toolResponses
-    }
+    public abstract SendMessage(message: GenericMessage): Promise<GenericResponse>;
 
 }
