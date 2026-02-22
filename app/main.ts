@@ -1,15 +1,18 @@
 import { readFileTool } from "./tools/readFile";
+import { writeFileTool } from "./tools/writeFile";
 import { LlmServiceOpenAI } from "./services/LlmServiceOpenAi";
 import { ToolService } from "./services/ToolService";
+import type { Tool } from "./repos/ToolRegistryRepo";
 
 function createLlmService(): LlmServiceOpenAI {
   const provider = process.env.LLM_PROVIDER
     ?? (process.env.OLLAMA_MODEL ? "ollama" : "openrouter");
 
+  let tools: Tool[] = [readFileTool, writeFileTool];
   if (provider === "ollama") {
     const model = process.env.OLLAMA_MODEL ?? "qwen3-coder:30b";
     const baseUrl = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434/v1";
-    return new LlmServiceOpenAI("ollama", baseUrl, model, [readFileTool]);
+    return new LlmServiceOpenAI("ollama", baseUrl, model, tools);
   }
 
   // OpenRouter (default)
@@ -18,7 +21,7 @@ function createLlmService(): LlmServiceOpenAI {
     throw new Error("OPENROUTER_API_KEY is not set");
   }
   const baseUrl = process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1";
-  return new LlmServiceOpenAI(apiKey, baseUrl, "anthropic/claude-haiku-4.5", [readFileTool]);
+  return new LlmServiceOpenAI(apiKey, baseUrl, "anthropic/claude-haiku-4.5", tools);
 }
 
 async function main() {
